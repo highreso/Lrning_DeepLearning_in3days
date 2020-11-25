@@ -9,7 +9,7 @@ from torchvision import datasets, transforms
 ## 今回は簡単のため全結合層しか用いていませんが画像の学習の際はほぼ100%、CNNという層をネットワークに使います。
 class DLNetwork(torch.nn.Module):
     def __init__(self):
-        super(MyNet, self).__init__()
+        super(DLNetwork, self).__init__()
         self.fc1 = torch.nn.Linear(28*28, 1000)
         self.fc2 = torch.nn.Linear(1000, 10)
  
@@ -53,25 +53,32 @@ if __name__ == '__main__':
     epoch = 20
  
     # ネットワークを構築
-    net: torch.nn.Module = DLNetwork()
+    model: torch.nn.Module = DLNetwork()
  
     # MNISTのデータローダを取得
     loaders = load_MNIST()
  
-    optimizer = torch.optim.Adam(params=net.parameters(), lr=0.001)
+    # 損失関数の最小点を探すアルゴリズムを指定します。Adamは現在メジャーです。
+    optimizer = torch.optim.Adam(params=model.parameters(), lr=0.001)
+
+    # GPUを使うための設定です。PyTorchではGPUを使用したい場合、明示的指定が必要です。
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
  
     for e in range(epoch):
- 
-        """訓練（training）セッション""""
+        """訓練（training）セッション"""
         loss = None
         # 学習開始
-        net.train(True)  # 引数は省略可能
+        model.train(True)  # 引数は省略可能
         for i, (data, target) in enumerate(loaders['train']):
             # 全結合のみのネットワークでは入力を1次元に
             data = data.view(-1, 28*28)  # 全結合層のノードに落とすため28*28の２次元行列を28*28個の要素からなるベクタに変換する
+            data.to(device)  # GPU演算を行うためにdataの内容をVRAMにアサインするイメージ(厳密には異なる)
  
             optimizer.zero_grad()
-            output = net(data)
+
+            output = model(data)
+            output.to(device)  # GPU演算を行うためにoutputの内容をVRAMにアサインするイメージ(厳密には異なる)
+
             loss = f.nll_loss(output, target)
             loss.backward()
             optimizer.step()
@@ -82,14 +89,18 @@ if __name__ == '__main__':
 
         """ テスト（testing）セッション"""
         # テスト：テスト用にmnistから分離したデータに対して学習時同様の処理をかけることで、学習処理部の検証を行うことができる。
-        net.eval()  # または net.train(False) でも良い
+        model.eval()  # または model.train(False) でも良い
         test_loss = 0
         correct = 0
  
         with torch.no_grad():
             for data, target in loaders['test']:
                 data = data.view(-1, 28 * 28)
-                output = net(data)
+                data.to(device)
+
+                output = model(data)
+                output.to(device)
+
                 test_loss += f.nll_loss(output, target, reduction='sum').item()
                 pred = output.argmax(dim=1, keepdim=True)
                 correct += pred.eq(target.view_as(pred)).sum().item()
