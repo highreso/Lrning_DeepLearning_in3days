@@ -70,18 +70,17 @@ if __name__ == '__main__':
         # 学習開始
         model.train(True)  # 引数は省略可能
         for i, (data, target) in enumerate(loaders['train']):
-            # 全結合のみのネットワークでは入力を1次元に
             data = data.view(-1, 28*28)  # 全結合層のノードに落とすため28*28の２次元行列を28*28個の要素からなるベクタに変換する
             data.to(device)  # GPU演算を行うためにdataの内容をVRAMにアサインするイメージ(厳密には異なる)
  
             optimizer.zero_grad()
 
-            output = model(data)
+            output = model(data)  # ネットワークの出力値
             output.to(device)  # GPU演算を行うためにoutputの内容をVRAMにアサインするイメージ(厳密には異なる)
 
-            loss = f.nll_loss(output, target)
+            loss = f.nll_loss(output, target)  # 損失関数の出力
             loss.backward()
-            optimizer.step()
+            optimizer.step()  # 極値探索（最小値探し）を次のステップへ
  
             if i % 10 == 0:
                 print('Training log: {} epoch ({} / 60000 train. data). Loss: {}'.format(e+1, (i+1)*128, loss.item()))
