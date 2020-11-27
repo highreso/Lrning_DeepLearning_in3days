@@ -1,7 +1,7 @@
 # PyTorchでMNIST画像認識
 
 >## 概要
-[公式ブログ記事](https://gpu-advance.highreso.jp/blog/wp-admin/post.php?post=570/?adid=github)用のレポジトリです
+[公式ブログ記事](https://gpu-advance.highreso.jp/blog/?p=570/?adid=github)用のレポジトリです
 
 
 >## 実行方法
